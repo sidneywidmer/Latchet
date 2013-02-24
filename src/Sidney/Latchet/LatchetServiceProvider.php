@@ -28,17 +28,38 @@ class LatchetServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		$this->registerLatchet();
+	    $this->registerCommands();
 	}
 
 	/**
-	 * Get the services provided by the provider.
+	 * Register the application bindings.
 	 *
-	 * @return array
+	 * @return void
 	 */
-	public function provides()
+	private function registerLatchet()
 	{
-		return array();
+		$this->app->bind('latchet', function($app)
+		{
+		    return new Latchet($app);
+		});
+	}
+
+	/**
+	 * Register the artisan commands.
+	 *
+	 * @return void
+	 */
+	private function registerCommands()
+	{
+		$this->app['command.latchet.listen'] = $this->app->share(function($app)
+		{
+			return new ListenCommand($app);
+		});
+
+		$this->commands(
+			'command.latchet.listen'
+		);
 	}
 
 }
