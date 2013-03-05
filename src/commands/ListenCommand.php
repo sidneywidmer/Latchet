@@ -4,10 +4,16 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
+use Ratchet\Wamp\WampServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
 
 class ListenCommand extends Command {
+
+	/**
+	 * Latchet Instance
+	 */
+	protected $latchet;
 
 	/**
 	 * The console command name.
@@ -28,8 +34,9 @@ class ListenCommand extends Command {
 	 *
 	 * @return void
 	 */
-	public function __construct()
+	public function __construct($app)
 	{
+		$this->latchet = $app->make('latchet');
 		parent::__construct();
 	}
 
@@ -41,11 +48,11 @@ class ListenCommand extends Command {
 	public function fire()
 	{
 		$server = IoServer::factory(
-			new WsServer(
-				new Latchet()
-			)
-			, $this->option('port')
+		    new WsServer(
+		        new WampServer($this->latchet)
+		    ), $this->option('port')
 		);
+
 
 		$this->info('Listening on port ' . $this->option('port'));
 		$server->run();
