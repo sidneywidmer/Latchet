@@ -1,51 +1,77 @@
 <?php namespace Sidney\Latchet;
 
 use Ratchet\Wamp\WampServerInterface;
+use Ratchet\Wamp\Topic;
 use Ratchet\ConnectionInterface as Conn;
-use ReflectionClass;
+
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\RequestContext;
 
 class Latchet implements WampServerInterface {
 
-	private $channels;
+	/**
+	 * The route collection instance.
+	 *
+	 * @var Symfony\Component\Routing\RouteCollection
+	 */
+	protected $routes;
+
+	public function __construct()
+	{
+		$this->routes = new RouteCollection;
+	}
+
+	public function channel($pattern, $action)
+	{
+		$this->createRoute($pattern, $action);
+	}
+
+	public function createRoute($pattern, $action)
+	{
+		$route = new Route($pattern, array('_controller' => $action));
+		$this->routes->add($pattern, $route);
+	}
+
+	private function dispatch($action, $variables)
+	{
+		$parameters = $this->getUrlMatcher($this->getTopicName($variables['topic']))->match('/'.$this->getTopicName($variables['topic']));
+		var_dump($parameters);
+		//$route = $this->routes->get($parameters['_route']);
+
+	}
+
+	private function getTopicName(Topic $topic)
+	{
+		return $topic->getId();
+	}
 
 	/**
-	 * Add a channel. Our websocket will listen on
-	 * incomming requests on this channel.
+	 * Create a new URL matcher instance.
 	 *
-	 * @param  string  $pattern
-	 * @param  mixed   $action
-	 * @return void
+	 * @return Symfony\Component\Routing\Matcher\UrlMatcher
 	 */
-	public function addChannel($pattern, $controller)
+	protected function getUrlMatcher($topic)
 	{
-		$this->channels[$pattern]['controller'] = $controller;
+		$context = new RequestContext($topic);
+
+		return new UrlMatcher($this->routes, $context);
 	}
 
-	/**
-	 * Check if it's a valid channel
-	 *
-	 * @param obj $channel
-	 * @return boolean
-	 */
-	private function validChannel($channel)
+	// No need to anything, since WampServer adds and removes subscribers to channels automatically
+	public function onSubscribe(Conn $conn, $topic)
 	{
-		return array_key_exists($channel->getId(), $this->channels);
+		//var_dump($conn->WebSocket);
+		$variables = array(
+			'connection' => $conn,
+			'topic' => $topic
+		);
+
+		$this->dispatch('subscribe', $variables);
 	}
 
-	private function getController($channel)
-	{
-		$channel = $this->channels[$channel->getId()];
-		if(array_key_exists('controller_obj', $channel) AND is_object($channel['controller_obj']))
-		{
-			return $channel['controller_obj'];
-		}
-		else
-		{
-			$classname = $channel['controller'];
-			$channel['controller_obj'] = new $classname;
-			return $channel['controller_obj'];
-		}
-	}
+	public function onOpen(Conn $conn){}
 
 	public function onPublish(Conn $conn, $channel, $message, array $exclude, array $eligible)
 	{
@@ -54,24 +80,16 @@ class Latchet implements WampServerInterface {
 	}
 
 	public function onCall(Conn $conn, $id, $channel, array $params) {
-		$conn->callError($id, $channel, 'RPC not allowed');
+		//$conn->callError($id, $channel, 'RPC not allowed');
+		//return $conn->callResult($id, array('id' => $roomId, 'display' => $topic));
 	}
 
-	// No need to anything, since WampServer adds and removes subscribers to channels automatically
-	public function onSubscribe(Conn $conn, $channel)
-	{
-		if($this->validChannel($channel))
-		{
-			$controller = $this->getController($channel);
-			$controller->onSubscribe($conn, $channel);
-		}
-	}
 	public function onUnSubscribe(Conn $conn, $channel) {}
 
-	public function onOpen(Conn $conn) {}
 	public function onClose(Conn $conn) {}
 	public function onError(Conn $conn, \Exception $e)
 	{
+		//var_dump($e);
 		$conn->close();
 	}
 
