@@ -39,7 +39,11 @@ class LatchetServiceProvider extends ServiceProvider {
 	 */
 	private function registerLatchet()
 	{
-		$this->app->instance('latchet', new Latchet);
+		$this->app['latchet'] = $this->app->share(function($app)
+		{
+			$latchet = new Latchet($app);
+			return $latchet;
+		});
 	}
 
 	/**

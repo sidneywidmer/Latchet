@@ -2,42 +2,78 @@
 
 use Ratchet\ConnectionInterface as Conn;
 
-class BaseChannel extends \BaseController {
+abstract class BaseChannel {
 
-	private $router;
+	abstract function subscribe(Conn $connection, $topic);
 
-	public function __construct()
+	abstract function publish(Conn $connection, $topic, $message, array $exclude, array $eligible);
+
+	abstract function call(Conn $connection, $id, $topic, array $params);
+
+	abstract function unsubscribe(Conn $connection, $topic);
+
+	/**
+	 * Broadcast message to clients
+	 *
+	 * @param Ratchet\Wamp\Topic $topic
+	 * @param mixed $msg
+	 * @param array $exclude
+	 * @param array $eligible
+	 * @return void
+	 */
+	protected function broadcast($topic, $msg, $exclude = array(), $eligible = array()) {
+		if(count($exclude) > 0)
+		{
+			$this->broadcastExclude($topic, $msg, $exclude);
+		}
+		elseif (count($eligible) > 0)
+		{
+			$this->broadcastEligible($topic, $msg, $eligible);
+		}
+		else
+		{
+			$topic->broadcast($msg);
+		}
+	}
+
+	/**
+	 * Broadcast message only to clients which
+	 * are not in the exclude array (blacklist)
+	 *
+	 * @param Ratchet\Wamp\Topic $topic
+	 * @param mixed $msg
+	 * @param array $exclude
+	 * @return void
+	 */
+	protected function broadcastExclude($topic, $msg, $exclude)
 	{
-		//$this->router = app()->make('router');
-		$currentroute = \Route::getCurrentRoute();
-		$params = $currentroute->getOption('_wsparams');
-		var_dump($params);
-		// $this->connection = $params['connection'];
+		foreach ($topic->getIterator() as $client)
+		{
+			if (!in_array($client->WAMP->sessionId, $exclude))
+			{
+				$client->event($topic, $msg);
+			}
+		}
 	}
 
-	public function onPublish(Conn $conn, $topic, $event, array $exclude = array(), array $eligible = array()) {
-		$topic->broadcast($event);
-	}
-
-	public function onCall(Conn $conn, $id, $topic, array $params) {
-
-	}
-
-	public function onOpen(Conn $conn) {
-	}
-
-	public function onClose(Conn $conn) {
-	}
-
-	public function onSubscribe($channel) {
-		//echo $this->connection->getid();
-		echo"subsccr";
-	}
-
-	public function onUnSubscribe(Conn $conn, $topic) {
-	}
-
-	public function onError(Conn $conn, \Exception $e) {
+	/**
+	 * Broadcast message only to clients which
+	 * are in the eligible array (whitelist)
+	 *
+	 * @param Ratchet\Wamp\Topic $topic
+	 * @param mixed $msg
+	 * @param array $eligible
+	 * @return void
+	 */
+	protected function broadcastEligible($topic, $msg, $eligible)
+	{
+		foreach ($topic->getIterator() as $client)
+		{
+			if (in_array($client->WAMP->sessionId, $eligible))
+			{
+				$client->event($topic, $msg);
+			}
+		}
 	}
 
 }

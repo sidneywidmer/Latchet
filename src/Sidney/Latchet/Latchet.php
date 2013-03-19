@@ -1,13 +1,18 @@
 <?php namespace Sidney\Latchet;
 
+use Illuminate\Container\Container;
+
 use Ratchet\Wamp\WampServerInterface;
 use Ratchet\Wamp\Topic;
 use Ratchet\ConnectionInterface as Conn;
 
-use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
+
+use Symfony\Component\Routing\Exception\ExceptionInterface;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Latchet implements WampServerInterface {
 
@@ -18,31 +23,115 @@ class Latchet implements WampServerInterface {
 	 */
 	protected $routes;
 
-	public function __construct()
+	/**
+	 * The inversion of control container instance.
+	 *
+	 * @var Illuminate\Container
+	 */
+	protected $container;
+
+	public function __construct(Container $container = null)
 	{
+		$this->container = $container;
+
 		$this->routes = new RouteCollection;
 	}
 
-	public function channel($pattern, $action)
+	/**
+	 * Allias for the createRoute function
+	 *
+	 * @param string $pattern
+	 * @param string $controller
+	 * @return void
+	 */
+	public function channel($pattern, $controller)
 	{
-		$this->createRoute($pattern, $action);
+		$this->createRoute($pattern, $controller);
 	}
 
-	public function createRoute($pattern, $action)
+	/**
+	 * Create and add a new route to the
+	 * RouteCollection
+	 *
+	 * @param string $pattern
+	 * @param string $controller
+	 * @return void
+	 */
+	public function createRoute($pattern, $controller)
 	{
-		$route = new Route($pattern, array('_controller' => $action));
+		$route = new Route($pattern, array('_controller' => $this->getCallback($controller)));
 		$this->routes->add($pattern, $route);
 	}
 
-	private function dispatch($action, $variables)
+	/**
+	 * Dispatch the 'request'
+	 *
+	 * @param string $event
+	 * @param array $variables
+	 */
+	protected function dispatch($event, $variables = array())
 	{
-		$parameters = $this->getUrlMatcher($this->getTopicName($variables['topic']))->match('/'.$this->getTopicName($variables['topic']));
-		var_dump($parameters);
-		//$route = $this->routes->get($parameters['_route']);
-
+		$route = $this->findRoute($variables);
+		$route->run($event);
 	}
 
-	private function getTopicName(Topic $topic)
+	/**
+	 * Create instance of the given Controller
+	 *
+	 * @param  string $controller
+	 * @return Object
+	 */
+	protected function getCallback($controller)
+	{
+		//TODO: check if instance of BaseChannel
+		$ioc = $this->container;
+		$instance = $ioc->make($controller);
+
+		return $instance;
+	}
+
+	/**
+	 * Find a route in our RouteCollection
+	 * and set all the necessary parameters
+	 *
+	 * @param array $variables
+	 * @return Sidney\Latchet\Route
+	 */
+	protected function findRoute($variables)
+	{
+		if(array_key_exists('topic', $variables))
+		{
+			$topicName = $this->getTopicName($variables['topic']);
+
+			try
+			{
+				$parameters = $this->getUrlMatcher($topicName)->match('/'.$topicName);
+			}
+			catch (ExceptionInterface $e)
+			{
+				if ($e instanceof ResourceNotFoundException)
+				{
+					throw new NotFoundHttpException("Requested Route not found");
+				}
+			}
+
+			$route = $this->routes->get($parameters['_route']);
+
+			$route->setWsParameters($variables);
+			$route->setRequestParameters($parameters);
+
+			return $route;
+		}
+	}
+
+	/**
+	 * Get the name of a topic/channel
+	 * just for convenience
+	 *
+	 * @param Ratchet\Wamp\Topic $topic
+	 * @return string
+	 */
+	protected function getTopicName(Topic $topic)
 	{
 		return $topic->getId();
 	}
@@ -50,47 +139,48 @@ class Latchet implements WampServerInterface {
 	/**
 	 * Create a new URL matcher instance.
 	 *
+	 * @param string $topic
 	 * @return Symfony\Component\Routing\Matcher\UrlMatcher
 	 */
-	protected function getUrlMatcher($topic)
+	protected function getUrlMatcher($topicName)
 	{
-		$context = new RequestContext($topic);
+		$context = new RequestContext($topicName);
 
 		return new UrlMatcher($this->routes, $context);
 	}
 
-	// No need to anything, since WampServer adds and removes subscribers to channels automatically
-	public function onSubscribe(Conn $conn, $topic)
+	public function onSubscribe(Conn $connection, $topic)
 	{
-		//var_dump($conn->WebSocket);
-		$variables = array(
-			'connection' => $conn,
-			'topic' => $topic
-		);
-
-		$this->dispatch('subscribe', $variables);
+		$this->dispatch('subscribe', compact('connection', 'topic'));
 	}
 
-	public function onOpen(Conn $conn){}
-
-	public function onPublish(Conn $conn, $channel, $message, array $exclude, array $eligible)
+	public function onPublish(Conn $connection, $topic, $message, array $exclude, array $eligible)
 	{
-		echo "New message boradcasted in Channel " . $channel->getId();
-		$channel->broadcast($message);
+		//$topic->broadcast($message);
+		$this->dispatch('publish', compact('connection', 'topic', 'message', 'exclude', 'eligible'));
 	}
 
-	public function onCall(Conn $conn, $id, $channel, array $params) {
-		//$conn->callError($id, $channel, 'RPC not allowed');
-		//return $conn->callResult($id, array('id' => $roomId, 'display' => $topic));
+	public function onCall(Conn $connection, $id, $topic, array $params)
+	{
+		$this->dispatch('call', compact('connection', 'id', 'topic', 'params'));
 	}
 
-	public function onUnSubscribe(Conn $conn, $channel) {}
-
-	public function onClose(Conn $conn) {}
-	public function onError(Conn $conn, \Exception $e)
+	public function onUnSubscribe(Conn $connection, $topic)
 	{
-		//var_dump($e);
-		$conn->close();
+		$this->dispatch('unsubscribe', compact('connection', 'topic'));
+	}
+
+	public function onOpen(Conn $connection)
+	{
+		//$this->dispatch('subscribe', compact('connection'));
+	}
+	public function onClose(Conn $connection) {}
+	public function onError(Conn $connection, \Exception $e)
+	{
+		//TODO: delegate events to laravel so we can
+		//use the framework error handler
+		var_dump($e->getMessage());
+		$connection->close();
 	}
 
 }
