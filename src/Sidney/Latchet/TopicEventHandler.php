@@ -2,10 +2,10 @@
 
 use Symfony\Component\Routing\Route as BaseRoute;
 
-class Route extends BaseRoute {
+class TopicEventHandler extends BaseRoute implements EventInterface {
 
 	/**
-	 * different Parameters set by ratchet e.g connection
+	 * different Parameters set by ratchet e.g connection, topic
 	 *
 	 * @var array
 	 */
@@ -27,7 +27,7 @@ class Route extends BaseRoute {
 	protected $mergedParameters;
 
 	/**
-	 * Execute the route
+	 * Execute the handler
 	 *
 	 * @param string $event
 	 * @return void
@@ -49,7 +49,7 @@ class Route extends BaseRoute {
 	}
 
 	/**
-	 * Set the matching request parameters array on the route
+	 * Set the matching request parameters array on the handler
 	 *
 	 * @param  array  $parameters
 	 * @return void
@@ -63,7 +63,7 @@ class Route extends BaseRoute {
 	 * Call the registered controller
 	 * with the right event
 	 *
-	 * @param string $event
+	 * @param string $event (subscribe, publish, call, unsubscribe)
 	 */
 	protected function callController($event)
 	{

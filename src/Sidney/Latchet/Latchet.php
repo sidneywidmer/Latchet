@@ -18,10 +18,19 @@ class Latchet implements WampServerInterface {
 
 	/**
 	 * The route collection instance.
+	 * We're using the Symfony component to use custom parameters
+	 * in a topicname
 	 *
 	 * @var Symfony\Component\Routing\RouteCollection
 	 */
-	protected $routes;
+	protected $topicEventHandlers;
+
+	/**
+	 * Instance of the ConnectionEventHandler.
+	 * We'll use it for the Ratchet open, close and error events
+	 * @var ConnectionEventHandler instance
+	 */
+	protected $connectionEventHandler;
 
 	/**
 	 * The inversion of control container instance.
@@ -34,33 +43,32 @@ class Latchet implements WampServerInterface {
 	{
 		$this->container = $container;
 
-		$this->routes = new RouteCollection;
+		$this->topicEventHandlers = new RouteCollection;
 	}
 
 	/**
-	 * Allias for the createRoute function
+	 * Create and add a new handler to the
+	 * RouteCollection a.k.a topicEventHandlers
 	 *
 	 * @param string $pattern
 	 * @param string $controller
 	 * @return void
 	 */
-	public function channel($pattern, $controller)
+	public function topic($pattern, $controller)
 	{
-		$this->createRoute($pattern, $controller);
+		$topicEventHandler = new TopicEventHandler($pattern, array('_controller' => $this->getCallback($controller)));
+		$this->topicEventHandlers->add($pattern, $topicEventHandler);
 	}
 
 	/**
-	 * Create and add a new route to the
-	 * RouteCollection
+	 * Create a new connection handler instance
 	 *
-	 * @param string $pattern
 	 * @param string $controller
 	 * @return void
 	 */
-	public function createRoute($pattern, $controller)
+	public function connection($controller)
 	{
-		$route = new Route($pattern, array('_controller' => $this->getCallback($controller)));
-		$this->routes->add($pattern, $route);
+		$this->connectionEventHandler = new ConnectionEventHandler($this->getCallback($controller));
 	}
 
 	/**
@@ -71,8 +79,8 @@ class Latchet implements WampServerInterface {
 	 */
 	protected function dispatch($event, $variables = array())
 	{
-		$route = $this->findRoute($variables);
-		$route->run($event);
+		$eventHandler = $this->findEventHandler($variables);
+		$eventHandler->run($event);
 	}
 
 	/**
@@ -91,37 +99,55 @@ class Latchet implements WampServerInterface {
 	}
 
 	/**
-	 * Find a route in our RouteCollection
-	 * and set all the necessary parameters
+	 * Find a eventHandler and set all the necessary parameters.
+	 * This can either be a topic or a connection eventhandler
 	 *
 	 * @param array $variables
-	 * @return Sidney\Latchet\Route
+	 * @return mixed (EventInterface instance)
 	 */
-	protected function findRoute($variables)
+	protected function findEventHandler($variables)
 	{
 		if(array_key_exists('topic', $variables))
 		{
-			$topicName = $this->getTopicName($variables['topic']);
-
-			try
-			{
-				$parameters = $this->getUrlMatcher($topicName)->match('/'.$topicName);
-			}
-			catch (ExceptionInterface $e)
-			{
-				if ($e instanceof ResourceNotFoundException)
-				{
-					throw new NotFoundHttpException("Requested Route not found");
-				}
-			}
-
-			$route = $this->routes->get($parameters['_route']);
-
-			$route->setWsParameters($variables);
-			$route->setRequestParameters($parameters);
-
-			return $route;
+			$eventHandler = $this->findTopicEvent($variables);
 		}
+		else
+		{
+			$eventHandler = $this->connectionEventHandler;
+			$eventHandler->setWsParameters($variables);
+		}
+
+		return $eventHandler;
+	}
+
+	/**
+	 * Find and return a TopicEvent in our Symfony RouteCollection
+	 *
+	 * @param array $variables
+	 * @return Sidne\Latchet\TopicEventHandler
+	 */
+	protected function findTopicEvent($variables)
+	{
+		$topicName = $this->getTopicName($variables['topic']);
+
+		try
+		{
+			$parameters = $this->getUrlMatcher($topicName)->match('/'.$topicName);
+		}
+		catch (ExceptionInterface $e)
+		{
+			if ($e instanceof ResourceNotFoundException)
+			{
+				throw new NotFoundHttpException("Requested Channel not found");
+			}
+		}
+
+		$eventHandler = $this->topicEventHandlers->get($parameters['_route']);
+
+		$eventHandler->setWsParameters($variables);
+		$eventHandler->setRequestParameters($parameters);
+
+		return $eventHandler;
 	}
 
 	/**
@@ -146,9 +172,11 @@ class Latchet implements WampServerInterface {
 	{
 		$context = new RequestContext($topicName);
 
-		return new UrlMatcher($this->routes, $context);
+		return new UrlMatcher($this->topicEventHandlers, $context);
 	}
 
+	//possible actions
+	//array('subscribe', 'publish', 'call', 'unsubscribe', 'open', 'close', 'error')
 	public function onSubscribe(Conn $connection, $topic)
 	{
 		$this->dispatch('subscribe', compact('connection', 'topic'));
@@ -172,9 +200,14 @@ class Latchet implements WampServerInterface {
 
 	public function onOpen(Conn $connection)
 	{
-		//$this->dispatch('subscribe', compact('connection'));
+		$this->dispatch('open', compact('connection'));
 	}
-	public function onClose(Conn $connection) {}
+
+	public function onClose(Conn $connection)
+	{
+		$this->dispatch('close', compact('connection'));
+	}
+
 	public function onError(Conn $connection, \Exception $e)
 	{
 		//TODO: delegate events to laravel so we can

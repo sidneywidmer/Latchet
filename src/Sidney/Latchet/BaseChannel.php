@@ -1,16 +1,14 @@
 <?php namespace Sidney\Latchet;
 
-use Ratchet\ConnectionInterface as Conn;
-
 abstract class BaseChannel {
 
-	abstract function subscribe(Conn $connection, $topic);
+	abstract function subscribe($connection, $topic);
 
-	abstract function publish(Conn $connection, $topic, $message, array $exclude, array $eligible);
+	abstract function publish($connection, $topic, $message, array $exclude, array $eligible);
 
-	abstract function call(Conn $connection, $id, $topic, array $params);
+	abstract function call($connection, $id, $topic, array $params);
 
-	abstract function unsubscribe(Conn $connection, $topic);
+	abstract function unsubscribe($connection, $topic);
 
 	/**
 	 * Broadcast message to clients
