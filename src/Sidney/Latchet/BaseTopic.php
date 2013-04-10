@@ -1,6 +1,6 @@
 <?php namespace Sidney\Latchet;
 
-abstract class BaseChannel {
+abstract class BaseTopic {
 
 	abstract function subscribe($connection, $topic);
 

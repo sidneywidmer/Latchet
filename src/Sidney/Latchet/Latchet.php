@@ -12,7 +12,6 @@ use Symfony\Component\Routing\RequestContext;
 
 use Symfony\Component\Routing\Exception\ExceptionInterface;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Latchet implements WampServerInterface {
 
@@ -56,8 +55,15 @@ class Latchet implements WampServerInterface {
 	 */
 	public function topic($pattern, $controller)
 	{
-		$topicEventHandler = new TopicEventHandler($pattern, array('_controller' => $this->getCallback($controller)));
-		$this->topicEventHandlers->add($pattern, $topicEventHandler);
+		if(is_subclass_of($controller, '\Sidney\Latchet\BaseTopic'))
+		{
+			$topicEventHandler = new TopicEventHandler($pattern, array('_controller' => $this->getCallback($controller)));
+			$this->topicEventHandlers->add($pattern, $topicEventHandler);
+		}
+		else
+		{
+			throw new LatchetException($controller . " has to extend BaseTopic");
+		}
 	}
 
 	/**
@@ -68,7 +74,14 @@ class Latchet implements WampServerInterface {
 	 */
 	public function connection($controller)
 	{
-		$this->connectionEventHandler = new ConnectionEventHandler($this->getCallback($controller));
+		if(is_subclass_of($controller, '\Sidney\Latchet\BaseConnection'))
+		{
+			$this->connectionEventHandler = new ConnectionEventHandler($this->getCallback($controller));
+		}
+		else
+		{
+			throw new LatchetException($controller . " has to extend BaseConnection");
+		}
 	}
 
 	/**
@@ -138,7 +151,7 @@ class Latchet implements WampServerInterface {
 		{
 			if ($e instanceof ResourceNotFoundException)
 			{
-				throw new NotFoundHttpException("Requested Channel not found");
+				throw new LatchetException("Requested Channel not found");
 			}
 		}
 
@@ -184,7 +197,6 @@ class Latchet implements WampServerInterface {
 
 	public function onPublish(Conn $connection, $topic, $message, array $exclude, array $eligible)
 	{
-		//$topic->broadcast($message);
 		$this->dispatch('publish', compact('connection', 'topic', 'message', 'exclude', 'eligible'));
 	}
 
@@ -208,12 +220,9 @@ class Latchet implements WampServerInterface {
 		$this->dispatch('close', compact('connection'));
 	}
 
-	public function onError(Conn $connection, \Exception $e)
+	public function onError(Conn $connection, \Exception $exception)
 	{
-		//TODO: delegate events to laravel so we can
-		//use the framework error handler
-		var_dump($e->getMessage());
-		$connection->close();
+		$this->dispatch('error', compact('connection', 'exception'));
 	}
 
 }

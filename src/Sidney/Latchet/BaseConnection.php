@@ -6,4 +6,6 @@ abstract class BaseConnection {
 
 	abstract function close($connection);
 
+	abstract function error($connection, $exception);
+
 }
