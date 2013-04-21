@@ -65,6 +65,13 @@ class ListenCommand extends Command {
 			), $webSock
 		);
 
+		// Allow Flash sockets (Internet Explorer) to connect to our app
+		$flashSock = new \React\Socket\Server($loop);
+		$flashSock->listen(843, '0.0.0.0');
+		$policy = new \Ratchet\Server\FlashPolicy;
+		$policy->addAllowedAccess('*', 80);
+		$webServer = new \Ratchet\Server\IoServer($policy, $flashSock);
+
 		$this->info('Listening on port ' . $this->option('port'));
 		$loop->run();
 	}
