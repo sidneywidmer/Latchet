@@ -65,15 +65,33 @@ class ListenCommand extends Command {
 			), $webSock
 		);
 
+		if(\Config::get('latchet::allowFlash'))
+		{
+			$this->allowFlash($loop);
+		}
+
+		$this->info('Listening on port ' . $this->option('port'));
+		$loop->run();
+	}
+
+	/**
+	 * Allow Flash sockets to connect to our server.
+	 * For this we have to listen on port 843 and return
+	 * the flashpolicy
+	 *
+	 * @param React\EventLoop\StreamSelectLoop $loop
+	 * @return void
+	 */
+	protected function allowFlash($loop)
+	{
 		// Allow Flash sockets (Internet Explorer) to connect to our app
 		$flashSock = new \React\Socket\Server($loop);
-		$flashSock->listen(843, '0.0.0.0');
+		$flashSock->listen(843, '0.0.0.0'); //flash always connects to 843 first
 		$policy = new \Ratchet\Server\FlashPolicy;
 		$policy->addAllowedAccess('*', $this->option('port'));
 		$webServer = new \Ratchet\Server\IoServer($policy, $flashSock);
 
-		$this->info('Listening on port ' . $this->option('port'));
-		$loop->run();
+		$this->info('Flash connection allowed');
 	}
 
 	/**
@@ -81,6 +99,7 @@ class ListenCommand extends Command {
 	 * the Server to the client
 	 *
 	 * @param React\EventLoop\StreamSelectLoop $loop
+	 * @return void
 	 */
 	protected function enablePush($loop)
 	{

@@ -44,4 +44,16 @@ return array(
 
 	'zmqPort' => 5555,
 
+	/*
+	|--------------------------------------------------------------------------
+	| Allow Flash
+	|--------------------------------------------------------------------------
+	|
+	| Allow legacy browsers to connect with the websocket polyfill
+	| https://github.com/gimite/web-socket-js
+	|
+	*/
+
+	'allowFlash' => true,
+
 );
