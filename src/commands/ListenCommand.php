@@ -69,7 +69,7 @@ class ListenCommand extends Command {
 		$flashSock = new \React\Socket\Server($loop);
 		$flashSock->listen(843, '0.0.0.0');
 		$policy = new \Ratchet\Server\FlashPolicy;
-		$policy->addAllowedAccess('*', 80);
+		$policy->addAllowedAccess('*', $this->option('port'));
 		$webServer = new \Ratchet\Server\IoServer($policy, $flashSock);
 
 		$this->info('Listening on port ' . $this->option('port'));
