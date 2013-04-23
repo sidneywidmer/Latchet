@@ -1,6 +1,6 @@
 {
     "name": "sidney/latchet",
-    "description": "Easy PubSub integration with Laravel 4",
+    "description": "WebSockets with Laravel 4",
     "authors": [
         {
             "name": "Sidney Widmer",
