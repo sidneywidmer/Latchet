@@ -48,7 +48,7 @@ class Latchet implements WampServerInterface {
 	/**
 	 * ZMQSocket instance
 	 *
-	 * @var \ZMQSocket $socket
+	 * @var ZMQSocket $socket
 	 */
 	protected $socket;
 
@@ -145,7 +145,7 @@ class Latchet implements WampServerInterface {
 	/**
 	 * get zmqSocket to push messages
 	 *
-	 * @return \ZMQSocket instance
+	 * @return ZMQSocket instance
 	 */
 	protected function getSocket()
 	{
@@ -164,7 +164,7 @@ class Latchet implements WampServerInterface {
 	/**
 	 * Connect to socket
 	 *
-	 * @return \ZMQSocket instance
+	 * @return ZMQSocket instance
 	 */
 	protected function connectZmq()
 	{

@@ -1,6 +1,6 @@
 <?php namespace Sidney\Latchet;
 
-class ConnectionEventHandler implements EventInterface {
+class ConnectionEventHandler implements HandlerInterface {
 
 	/**
 	 * different Parameters set by ratchet e.g connection, topic

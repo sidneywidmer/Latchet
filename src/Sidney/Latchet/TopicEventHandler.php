@@ -2,7 +2,7 @@
 
 use Symfony\Component\Routing\Route as BaseRoute;
 
-class TopicEventHandler extends BaseRoute implements EventInterface {
+class TopicEventHandler extends BaseRoute implements HandlerInterface {
 
 	/**
 	 * different Parameters set by ratchet e.g connection, topic

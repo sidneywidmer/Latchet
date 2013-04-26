@@ -1,6 +1,6 @@
 <?php namespace Sidney\Latchet;
 
-interface EventInterface {
+interface HandlerInterface {
 
 	public function run($event);
 
