@@ -1,6 +1,12 @@
 # Latchet (Laravel4 Package)
 
-Latchet takes the hassle out of PHP backed realtime apps. At its base, it's a extended version of  [Ratchet](https://github.com/cboden/Ratchett "Ratchet") to work nicely with laravel.
+##Important
+
+This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, the demo app is missing and some of the code needs to get polished. So please don't use the package - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
+
+##Intro
+
+Latchet takes the hassle out of PHP backed realtime apps. At its base, it's a extended version of  [Ratchet](https://github.com/cboden/Ratchet "Ratchet") to work nicely with laravel.
 
 If you're finished setting up a basic WampServer, you'll have something like this:
 
