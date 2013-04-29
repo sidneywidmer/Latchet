@@ -1,4 +1,4 @@
-<?php namespace Sidney\Latchet;
+<?php namespace Sidney\Latchet\Handlers;
 
 class ConnectionEventHandler implements HandlerInterface {
 

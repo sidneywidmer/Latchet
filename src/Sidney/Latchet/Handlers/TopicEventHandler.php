@@ -1,4 +1,4 @@
-<?php namespace Sidney\Latchet;
+<?php namespace Sidney\Latchet\Handlers;
 
 use Symfony\Component\Routing\Route as BaseRoute;
 

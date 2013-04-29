@@ -1,6 +1,7 @@
 <?php namespace Sidney\Latchet;
 
 use Illuminate\Support\ServiceProvider;
+use Sidney\Latchet\Generators\Generator;
 
 class LatchetServiceProvider extends ServiceProvider {
 
@@ -58,8 +59,18 @@ class LatchetServiceProvider extends ServiceProvider {
 			return new ListenCommand($app);
 		});
 
+		$this->app['command.latchet.generate'] = $this->app->share(function($app)
+		{
+			$path = app_path() . '/socket';
+
+			$generator = new Generator($app['files']);
+
+			return new GenerateCommand($generator, $path);
+		});
+
 		$this->commands(
-			'command.latchet.listen'
+			'command.latchet.listen',
+			'command.latchet.generate'
 		);
 	}
 

@@ -13,6 +13,9 @@ use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\Exception\ExceptionInterface;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
+use Sidney\Latchet\Handlers\ConnectionEventHandler;
+use Sidney\Latchet\Handlers\TopicEventHandler;
+
 class Latchet implements WampServerInterface {
 
 	/**
