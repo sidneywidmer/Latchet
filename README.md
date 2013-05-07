@@ -2,7 +2,7 @@
 
 ##Important
 
-This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, the demo app is missing and some of the code needs to get polished. So please don't use the package - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
+This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, the demo app is missing and some of the code needs to get polished. So please don't use the package for productoin - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
 
 ##Intro
 
@@ -17,7 +17,7 @@ If you're finished setting up a basic WampServer, you'll have something like thi
 ### Earlybird
 
 Until i submit the pakage to packagist, include it directly from github.
-    
+
     "repositories": [
         {
             "type": "vcs",
@@ -59,7 +59,7 @@ At the end of `config/app.php` add `'Latchet'    => 'Sidney\Latchet\LatchetFacad
         'Latchet'    => 'Sidney\Latchet\LatchetFacade',
 
     ),
-    
+
 
 ### Configuration
 
@@ -67,40 +67,40 @@ Publish the config file with the following artisan command: `php artisan config:
 
 There are not a lot of configuration options, the most important will be `enablePush` and `zmqPort`. This requires some extra configuration on your server and is discussed in the next section.
 
-The rest of the options should be pretty self self-explanatory. 
+The rest of the options should be pretty self self-explanatory.
 
 ### Enable push
 
-Braindump:
+Todo, until then -> Braindump:
 
 * Installing zermq; (in this order) ubuntu
 * http://johanharjono.com/archives/633 (if this doesn't work, compile from source)
 * http://www.zeromq.org/intro:get-the-software
 * http://www.zeromq.org/bindings:php (eventualli apt-get install pkg-config, make)
-* add extension=zmq.so to php.ini 
-* check if extension loaded php -m 
+* add extension=zmq.so to php.ini
+* check if extension loaded php -m
 * check if zeromq package (zlib1g) is installed dpkg --get-selections
 
 ## Usage
 
 ### Introduction
 
-Like mentioned before, Latchet is based on Ratchet and just extends its functionality with some nice extra features like passing parameters in ***topics***. But Latchet also removes some of the flexibility Ratchet provides for the sake of simplicity. Latchet solely focuses on providing a WampServer for your aplications. 
+Like mentioned before, Latchet is based on Ratchet and just extends its functionality with some nice extra features like passing parameters in ***topics***. But Latchet also removes some of the flexibility Ratchet provides for the sake of simplicity. Latchet solely focuses on providing a WampServer for your aplications.
 
 #### Topics
 
-I would really recommend you to read through the [Ratchet docs](http://socketo.me/docs/ "Ratchet docs"). They explain the basic principles very clearly. 
+I would really recommend you to read through the [Ratchet docs](http://socketo.me/docs/ "Ratchet docs"). They explain the basic principles very clearly.
 
-Once you get the hang of it, topics are really easy to understand. Imagine a standart laravel route as you know it. 
+Once you get the hang of it, topics are really easy to understand. Imagine a standart laravel route as you know it.
 
 	Route::get('my/route/{parameter}', 'MyController@action');
-	
+
 Topics (or if you are familiar with other forms of messaging, channels) are the same for websocket connections.
 There's always a client which subscribes to a topic. If other clients connect to the same topic, they can then broadcast messages to this subscribed topic or a specific client connected to this topic. See how to register a Controller which handles incomming connections in the next chapter.
 
 ### Server
 
-Everything we're doing in this section is just to set up a WampServer which will then be started from the command line and listen on incomming connections. Basically there are two different handlers we have to set up. One which handles different connection actions and (at least) one for our topic(s) actions. 
+Everything we're doing in this section is just to set up a WampServer which will then be started from the command line and listen on incomming connections. Basically there are two different handlers we have to set up. One which handles different connection actions and (at least) one for our topic(s) actions.
 
 To clarify stuff:
 
@@ -120,10 +120,10 @@ To clarify stuff:
 #### Generate files - the artisan way
 
 To simplify the process, there's an easy to use artisan command to generate all the necessary files:
-	
-	$ php artisan latchet:generate 
-	
-This will do two things. First it'll create the folder app/socket and copy two files in this folder. One to handle incomming connections (Connection.php) and one to handle subscriptions e.t.c to a topic (TestTopic.php). And second it'll register theses two new classes at the end of your app/routes.php file. 
+
+	$ php artisan latchet:generate
+
+This will do two things. First it'll create the folder app/socket and copy two files in this folder. One to handle incomming connections (Connection.php) and one to handle subscriptions e.t.c to a topic (TestTopic.php). And second it'll register theses two new classes at the end of your app/routes.php file.
 
 Make shure to add the socket folder to the laravel class loader or your composer.json file. The easiest way would be to add `app_path().'/socket',` in your `app/start/global.php` file.
 
@@ -134,15 +134,15 @@ Make shure to add the socket folder to the laravel class loader or your composer
 		app_path().'/socket',
 
 	));
-	
-Basically you could now start the server and subscribe to `test-topic`. I'd recommend to check the next two chapters as they explain what you can do with the newly added connection and topic handlers. 
+
+Basically you could now start the server and subscribe to `test-topic`. I'd recommend to check the next two chapters as they explain what you can do with the newly added connection and topic handlers.
 
 #### Connection handler
 
 If you've ran the above `artisan:generate` command, you'll have a connection handler registered in your routes.php file. It defines how to react on different connection actions. So anytime a new connection to the server is establish, we'll ask the controller what to do. Easy as a pie:
 
 	Latchet::connection('Connection');
-	
+
 It handles the following actions:
 
 * open
@@ -156,7 +156,7 @@ For example, you could here close a connection `$connection->close()`, or add so
 		$connection->Chat        = new \StdClass;
         $connection->Chat->rooms = array();
         $connection->Chat->name  = $connection->WAMP->sessionId;
-        
+
 From now on, `$connection->Chat->name` will always be available in the `$connection` variable which gets passed to most of the action methods.
 
 Because the server should be constantly running, there's an extra function for error handling. Whenever an error occurs, the error function is triggered. In the default template, which gets generated by the artisan command, the error just gets thrown again. This stops the server and the error is displayed in your console. For production it's important that you don't rethrow the error, but instead log it. An error gets thrown if someone for example tries to connect to a non existend topic.
@@ -166,7 +166,7 @@ Because the server should be constantly running, there's an extra function for e
 Now it gets interesting. With latchet you can register new topics and pass parameters to it:
 
 	Latchet::topic('chat/room/{roomid}', 'ChatRoomController');
-	
+
 And in the topic handler (e.g. `app/socket/ChatRoomController.php`):
 
 	<?php
@@ -180,11 +180,11 @@ And in the topic handler (e.g. `app/socket/ChatRoomController.php`):
 		echo $roomid;
 	}
 	…
-	
-If a client now subscribes to `chat/room/lobby` you get the value 'lobby' in your class. 
+
+If a client now subscribes to `chat/room/lobby` you get the value 'lobby' in your class.
 
 And if you want to broadcast a message (gets json encoded) to all other subscribers of a particular channel:
-	
+
 	public function publish($connection, $topic, $message, array $exclude, array $eligible)
 	{
 		$this->broadcast($topic, array('msg' => 'New broadcasted message!'))
@@ -199,24 +199,24 @@ There are other methods to handle the following actions:
 
 #### Push
 
-If you have push enabled in your config file, it's also possible to publish messages from different locations in your application. 
+If you have push enabled in your config file, it's also possible to publish messages from different locations in your application.
 
 	Latchet::publish('chat/room/lobby', array('msg' => 'foo'));
 
-Like that you could for example react to ajax requests. 
+Like that you could for example react to ajax requests.
 
 
 #### Start the server
 
 Use the following artisan command to start the server:
-	
-	$ sudo php artisan latchet:listen 
-	
+
+	$ sudo php artisan latchet:listen
+
 Also make shure to read the Ratchet docs on how to deploy your app: [Ratchet Docs - Deployment](http://socketo.me/docs/deploy "Ratchet Docs")
 
 ### Client
 
-Now that we have our server up and running, we somehow need to connect to it right? [Autobahn JS](http://autobahn.ws/js "Autobahn JS") to the rescue. 
+Now that we have our server up and running, we somehow need to connect to it right? [Autobahn JS](http://autobahn.ws/js "Autobahn JS") to the rescue.
 
 #### Javascript / Legacy browsers
 
@@ -239,7 +239,7 @@ Now that we have our server up and running, we somehow need to connect to it rig
 			'skipSubprotocolCheck': true
 		}
 	);
-	
+
 For older browsers, which do not support websockts, make shure to inlcude [web-socket-js](https://github.com/gimite/web-socket-js "web-socket-js") and allow flash in your config file.
 
 #### Demoapp
