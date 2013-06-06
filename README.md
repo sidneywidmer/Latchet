@@ -244,4 +244,5 @@ For older browsers, which do not support websockts, make shure to inlcude [web-s
 
 #### Demoapp
 
-Work in progress.
+I'm in the process of building a simple demo application with laravel, the latchet package, autobahn.js and backbone.
+There's still a lot of work to do but you can find the repo here: [whatup](Whatup https://github.com/sidneywidmer/whatup "whatup")
