@@ -214,6 +214,10 @@ Use the following artisan command to start the server:
 
 Also make shure to read the Ratchet docs on how to deploy your app: [Ratchet Docs - Deployment](http://socketo.me/docs/deploy "Ratchet Docs")
 
+One word to the environment: Because the whole application will be running from the console, make shure to pass the desired environment as a parameter in your console command e.g:
+
+	$ sudo php artisan latchet:listen --env=local
+
 ### Client
 
 Now that we have our server up and running, we somehow need to connect to it right? [Autobahn JS](http://autobahn.ws/js "Autobahn JS") to the rescue.
