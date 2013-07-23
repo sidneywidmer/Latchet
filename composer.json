@@ -10,7 +10,6 @@
     "require": {
         "php": ">=5.3.0",
         "illuminate/support": "4.0.x",
-        "guzzle/http": "<3.6.0",
         "cboden/Ratchet": "dev-master"
     },
     "autoload": {
