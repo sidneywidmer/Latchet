@@ -2,7 +2,7 @@
 
 ##Important
 
-This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, the demo app is missing and some of the code needs to get polished. So please don't use the package for productoin - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
+This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, and some of the code needs to get polished. So please don't use the package for productoin - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
 
 ##Intro
 
@@ -248,5 +248,5 @@ For older browsers, which do not support websockts, make shure to inlcude [web-s
 
 #### Demoapp
 
-I'm in the process of building a simple demo application with laravel, the latchet package, autobahn.js and backbone.
-There's still a lot of work to do but you can find the repo here: [whatup](https://github.com/sidneywidmer/whatup "whatup")
+Check the demo application built with laravel, the latchet package, autobahn.js and backbone: [whatup](https://github.com/sidneywidmer/whatup "whatup")
+And for a live demo: [whatup.im](http://whatup.im "whatup.im")
