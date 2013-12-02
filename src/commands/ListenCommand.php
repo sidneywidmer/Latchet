@@ -54,12 +54,16 @@ class ListenCommand extends Command {
 		$webSock = new \React\Socket\Server($loop);
 		$webSock->listen($this->option('port'), '0.0.0.0'); // Binding to 0.0.0.0 means remotes can connect
 		$webServer = new \Ratchet\Server\IoServer(
-			new \Ratchet\WebSocket\WsServer(
-				new \Ratchet\Wamp\WampServer(
-					$this->latchet
+			new \Ratchet\Http\HttpServer(
+				new \Ratchet\WebSocket\WsServer(
+					new \Ratchet\Wamp\WampServer(
+						$this->latchet
+					)
 				)
 			), $webSock
 		);
+
+
 
 		if(\Config::get('latchet::allowFlash'))
 		{
