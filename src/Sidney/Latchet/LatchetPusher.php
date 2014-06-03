@@ -21,6 +21,14 @@ class LatchetPusher {
 			$this->subscribedTopics[$topic->getId()] = $topic;
 		}
 	}
+	
+	/**
+	 * Reset subscriber after the connection is closed
+	 */
+	public function removeSubscriber()
+	{
+		$this->subscribedTopics = array();
+	}
 
 	/**
 	 * json we recieve from ZerMQ
