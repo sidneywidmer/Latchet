@@ -77,4 +77,8 @@ return array(
 
 	'flashPort' => 843,
 
+  'socketPushId' => sprintf('latchet.push.%s', \App::environment()),
+
+  'socketPullId' => sprintf('latchet.pull.%s', \App::environment())
+
 );

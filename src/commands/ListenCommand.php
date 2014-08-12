@@ -101,7 +101,7 @@ class ListenCommand extends Command {
 	{
 		// Listen for the web server to make a ZeroMQ push after an ajax request
 		$context = new \React\ZMQ\Context($loop);
-		$pull = $context->getSocket(\ZMQ::SOCKET_PULL);
+		$pull = $context->getSocket(\ZMQ::SOCKET_PULL, \Config::get('latchet::socketPullId', sprintf('latchet.pull.%s', \App::environment())));
 		$pull->bind('tcp://127.0.0.1:'.\Config::get('latchet::zmqPort')); // Binding to 127.0.0.1 means the only client that can connect is itself
 		$pull->on('message', array($this->latchet, 'serverPublish'));
 
