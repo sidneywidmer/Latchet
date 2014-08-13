@@ -76,5 +76,23 @@ return array(
 	*/
 
 	'flashPort' => 843,
+	
+	/*
+	|--------------------------------------------------------------------------
+	| ZMQ socket push persistent id
+	|--------------------------------------------------------------------------
+	| you should make it unique with environment there are multi environment on your server
+	| sprintf('latchet.push.%s', App::environment());
+	*/
+	'socketPushId' => 'latchet.push',
+	  
+	/*
+	|--------------------------------------------------------------------------
+	| ZMQ socket pull persistent id
+	|--------------------------------------------------------------------------
+	| you should make it unique with environment there are multi environment on your server
+	| sprintf('latchet.pull.%s', App::environment());
+	*/
+	'socketPullId' => 'latchet.pull'
 
 );

@@ -172,7 +172,7 @@ class Latchet implements WampServerInterface {
 	protected function connectZmq()
 	{
 		$context = new \ZMQContext();
-		$this->socket = $context->getSocket(\ZMQ::SOCKET_PUSH, 'latchet');
+		$this->socket = $context->getSocket(\ZMQ::SOCKET_PUSH, \Config::get('latchet::socketPushId', sprintf('latchet.push.%s', \App::environment())));
 		$this->socket->connect("tcp://localhost:".\Config::get('latchet::zmqPort'));
 
 		return $this->socket;
