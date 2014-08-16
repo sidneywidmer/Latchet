@@ -345,7 +345,7 @@ class Latchet implements WampServerInterface {
 		if ($this->enablePush)
 	        {
 	            // After connection is closed, the subscriber topic must be reset	
-	            $this->pusher->removeSubscriber();
+	            $this->pusher->removeSubscriber($connection);
 	        }
 
 		$this->dispatch('close', compact('connection'));
