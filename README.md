@@ -2,7 +2,7 @@
 
 ##Important
 
-This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, and some of the code needs to get polished. So please don't use the package for productoin - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
+This is not even an alpha version. There's still a lot of stuff going on. The docs aren't finished, and some of the code needs to get polished. So please don't use the package for production - yet. If you want to keep up to date you can follow me on [Twitter](https://twitter.com/sidneywidmer "Twitter")
 
 ##Intro
 
