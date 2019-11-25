@@ -85,7 +85,7 @@ Todo, until then -> Braindump:
 
 ### Introduction
 
-Like mentioned before, Latchet is based on Ratchet and just extends its functionality with some nice extra features like passing parameters in ***topics***. But Latchet also removes some of the flexibility Ratchet provides for the sake of simplicity. Latchet solely focuses on providing a WampServer for your aplications.
+Like mentioned before, Latchet is based on Ratchet and just extends its functionality with some nice extra features like passing parameters in ***topics***. But Latchet also removes some of the flexibility Ratchet provides for the sake of simplicity. Latchet solely focuses on providing a WampServer for your applications.
 
 #### Topics
 
